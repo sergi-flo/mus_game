@@ -1,0 +1,10 @@
+/myenv
+.python-version
+__pycache__/
+mysql/data
+mysql/logs
+app/data
+app/logs
+app/static/img
+app/templates
+secrets/

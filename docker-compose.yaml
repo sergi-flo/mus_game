@@ -1,0 +1,65 @@
+version: '3.9'
+
+services:
+  mysql:
+    container_name: mysql-mus-game
+    image: mysql
+    restart: always
+    build:
+      context: ./mysql
+      dockerfile: Dockerfile
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql-root-password
+      MYSQL_USER_FILE: /run/secrets/mysql-user
+      MYSQL_PASSWORD_FILE: /run/secrets/mysql-user-password
+      MYSQL_DATABASE_FILE: /run/secrets/mysql-database
+    expose:
+      - "3306"
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+      - ./mysql/logs:/var/log/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    secrets:
+      - mysql-root-password
+      - mysql-user
+      - mysql-user-password
+      - mysql-database
+    healthcheck:
+      test: mysql -h localhost --user=$$(cat $$MYSQL_USER_FILE) --password=$$(cat $$MYSQL_PASSWORD_FILE) --execute "SHOW DATABASES;"
+      interval: 2s
+      timeout: 20s
+      retries: 50
+
+  # Flask App
+  app:
+    container_name: mus-game-api
+    build: ./app  
+    ports:
+      - "5000:5000"  # Expose Flask app on port 5000
+    env_file:
+      - ./app/.env
+    volumes:
+      - ./app/logs:/home/logs
+    secrets:
+      - mysql-user
+      - mysql-user-password
+      - mysql-database
+      - secret-key
+      - TOKEN
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+secrets:
+  TOKEN:
+    file: ./secrets/token
+  mysql-user:
+    file: ./secrets/mysql-user
+  mysql-root-password:
+    file: ./secrets/mysql-root-password
+  mysql-user-password:
+    file: ./secrets/mysql-user-password
+  mysql-database:
+    file: ./secrets/mysql-database
+  secret-key:
+    file: ./secrets/secret-key
