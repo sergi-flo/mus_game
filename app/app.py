@@ -1,6 +1,8 @@
 import os
+import secrets
 
 from flask import Flask, jsonify, request
+from flask_bcrypt import Bcrypt
 from flask_marshmallow import Marshmallow
 from flask_sqlalchemy import SQLAlchemy
 from utils import get_docker_secrets
@@ -21,6 +23,11 @@ app.config[
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
+bcrypt = Bcrypt(app)
+
+
+# Define a secret pepper
+app.config["SECRET_PEPPER"] = get_docker_secrets("pepper")
 
 
 # Define User model
@@ -28,10 +35,22 @@ class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
+    salt = db.Column(db.String(32), nullable=False)
 
     def __init__(self, username, password):
         self.username = username
-        self.password = password
+        self.password_hash, self.salt = self._generate_hash(password)
+
+    def _generate_hash(self, password):
+        # Generate a new salt for each user
+        salt = secrets.token_hex(16)
+
+        return [
+            bcrypt.generate_password_hash(
+                password + app.config["SECRET_PEPPER"] + salt
+            ).decode("utf-8"),
+            salt,
+        ]
 
 
 # Define User Schema for serialization

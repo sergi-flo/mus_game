@@ -46,6 +46,7 @@ services:
       - mysql-database
       - secret-key
       - TOKEN
+      - pepper
     depends_on:
       mysql:
         condition: service_healthy
@@ -63,3 +64,5 @@ secrets:
     file: ./secrets/mysql-database
   secret-key:
     file: ./secrets/secret-key
+  pepper:
+    file: ./secrets/pepper
