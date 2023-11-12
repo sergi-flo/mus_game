@@ -10,8 +10,5 @@ RUN pip install -r requirements.txt
 # Copy your Python files into the container
 COPY . .
 
-# Expose the port your app runs on
-EXPOSE 5000
-
 # Start your Flask app
 CMD ["python", "app.py"]

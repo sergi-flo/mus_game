@@ -30,8 +30,8 @@ services:
       timeout: 20s
       retries: 50
 
-  # Flask App
-  app:
+  # Flask API
+  flask-api:
     container_name: mus-game-api
     build: ./app  
     ports:
@@ -50,6 +50,18 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+  
+  # React Frontend
+  user-interface:
+    container_name: mus-game-interface
+    build: ./mus-game-interface
+    ports:
+      - "8080:8080"  # Expose React app on port 3000
+    volumes:
+      - ./mus-game-interface/src:/app/src
+      - ./mus-game-interface/public:/app/public
+    depends_on:
+      - flask-api
 
 secrets:
   TOKEN:

@@ -3,12 +3,14 @@ import secrets
 
 from flask import Flask, jsonify, request
 from flask_bcrypt import Bcrypt
+from flask_cors import CORS
 from flask_marshmallow import Marshmallow
 from flask_sqlalchemy import SQLAlchemy
 from utils import get_docker_secrets
 
 # Initialize Flask app
 app = Flask(__name__)
+CORS(app)
 
 # Configure the database connection
 sql_drivers = os.environ.get("SQL_DRIVERS")
@@ -39,7 +41,7 @@ class Users(db.Model):
 
     def __init__(self, username, password):
         self.username = username
-        self.password_hash, self.salt = self._generate_hash(password)
+        self.password, self.salt = self._generate_hash(password)
 
     def _generate_hash(self, password):
         # Generate a new salt for each user
@@ -70,11 +72,12 @@ def add_user():
     password = request.json["password"]
 
     new_user = Users(username, password)
-
-    db.session.add(new_user)
-    db.session.commit()
-
-    return user_schema.jsonify(new_user)
+    try:
+        db.session.add(new_user)
+        db.session.commit()
+        return user_schema.jsonify(new_user)
+    except Exception:
+        return jsonify({"message": "Error creating user"})
 
 
 # Get all users
