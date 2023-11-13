@@ -71,13 +71,17 @@ def add_user():
     username = request.json["username"]
     password = request.json["password"]
 
+    user_exists = Users.query.filter_by(username=username).first()
+    if user_exists:
+        return jsonify({"message": "User already exists"}), 409
+
     new_user = Users(username, password)
     try:
         db.session.add(new_user)
         db.session.commit()
-        return user_schema.jsonify(new_user)
+        return user_schema.jsonify(new_user), 201
     except Exception:
-        return jsonify({"message": "Error creating user"})
+        return jsonify({"message": "Error creating user"}), 500
 
 
 # Get all users
@@ -93,6 +97,23 @@ def get_users():
 def user_detail(user_id):
     user_info = Users.get(int(user_id))
     return user_schema.jsonify(user_info)
+
+
+@app.route("/login", methods=["POST"])
+def login():
+    username = request.json["username"]
+    password = request.json["password"]
+
+    user = Users.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({"message": "User does not exist"})
+
+    if bcrypt.check_password_hash(
+        user.password, password + app.config["SECRET_PEPPER"] + user.salt
+    ):
+        return jsonify({"message": "Login successful"})
+    else:
+        return jsonify({"message": "Invalid credentials"})
 
 
 if __name__ == "__main__":
