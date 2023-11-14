@@ -13,9 +13,9 @@ const RegistrationPage = () => {
 
     try {
       const response = await registerService.register({ username, password })
-      const message = await response.json()
       if (!response.ok) {
         // Handle registration error
+        const message = await response.json()
         setRegistrationMessage(message.message)
         return
       }

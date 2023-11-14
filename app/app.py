@@ -6,11 +6,24 @@ from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_marshmallow import Marshmallow
 from flask_sqlalchemy import SQLAlchemy
+from flask_wtf.csrf import CSRFProtect, generate_csrf
 from utils import get_docker_secrets
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app)
+app.config.update(
+    DEBUG=True,
+    SECRET_KEY="secret_sauce",
+    SESSION_COOKIE_HTTPONLY=True,
+    REMEMBER_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+)
+csrf = CSRFProtect(app)
+CORS(
+    app,
+    expose_headers=["Content-Type", "X-CSRFToken"],
+    supports_credentials=True,
+)
 
 # Configure the database connection
 sql_drivers = os.environ.get("SQL_DRIVERS")
@@ -63,6 +76,15 @@ class UsersSchema(ma.Schema):
 
 user_schema = UsersSchema()
 users_schema = UsersSchema(many=True)
+
+
+@app.route("/getcsrf", methods=["GET"])
+def get_csrf():
+    token = generate_csrf()
+    response = jsonify({"detail": "CSRF cookie set"})
+    response.headers.set("X-CSRFToken", token)
+    response.set_cookie(f"csrftoken={token}")
+    return response
 
 
 # Create a new user

@@ -2,6 +2,7 @@ import { Route, Link, Switch } from 'wouter'
 import RegistrationPage from './components/RegistrationPage'
 import LoginPage from './components/LoginPage'
 import './App.css'
+import { useEffect } from 'react'
 
 const HomePage = () => {
   return (
@@ -12,6 +13,16 @@ const HomePage = () => {
 }
 
 function App () {
+  useEffect(() => {
+    fetch('http://localhost:5000/getcsrf', {
+      credentials: 'include'
+    })
+      .then(response => response.json())
+      .catch(error => {
+        console.log(error)
+      })
+  }, [])
+
   return (
     <div className="App">
       <header>
