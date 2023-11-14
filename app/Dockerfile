@@ -11,4 +11,4 @@ RUN pip install -r requirements.txt
 COPY . .
 
 # Start your Flask app
-CMD ["python", "app.py"]
+CMD ["python", "run_app.py"]
